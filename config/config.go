@@ -1,0 +1,52 @@
+package config
+
+import (
+	"fmt"
+	"net/url"
+	"os"
+)
+
+type Config struct {
+	Port          string
+	AdminUsername string
+	AdminPassword string
+	DatabaseURL   string
+	BaseURL       string
+}
+
+func Load() *Config {
+	return &Config{
+		Port:          getEnv("PORT", "8090"),
+		AdminUsername: getEnv("ADMIN_USERNAME", "admin"),
+		AdminPassword: getEnv("ADMIN_PASSWORD", "ahv-admin-2024"),
+		DatabaseURL:   buildDSN(),
+		BaseURL:       getEnv("BASE_URL", "http://localhost:8090"),
+	}
+}
+
+func buildDSN() string {
+	// Railway (and most PaaS) injects a ready-made connection URL.
+	if u := os.Getenv("DATABASE_URL"); u != "" {
+		return u
+	}
+
+	host := getEnv("DB_HOST", "localhost")
+	port := getEnv("DB_PORT", "5432")
+	user := getEnv("DB_USER", "postgres")
+	pass := getEnv("DB_PASSWORD", "")
+	name := getEnv("DB_NAME", "postgres")
+	ssl  := getEnv("DB_SSLMODE", "disable")
+
+	q := url.Values{}
+	q.Set("sslmode", ssl)
+	q.Set("search_path", "ahv_worldwide")
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?%s",
+		url.PathEscape(user), url.PathEscape(pass), host, port, name, q.Encode())
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
