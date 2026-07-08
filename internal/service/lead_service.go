@@ -10,8 +10,8 @@ import (
 func CreateLead(l model.Lead) (model.Lead, error) {
 	var id int
 	err := db.DB.QueryRow(`
-		INSERT INTO leads (name, email, phone, country, inquiry, message, source)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO leads (name, email, phone, country, inquiry, message, source, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
 		RETURNING id`,
 		l.Name, l.Email, l.Phone, l.Country, l.Inquiry, l.Message, l.Source,
 	).Scan(&id)
